@@ -6,6 +6,7 @@ import { DashboardBranch } from './components/DashboardBranch';
 import { BranchesView } from './components/BranchesView';
 import { UsersView } from './components/UsersView';
 import { CatalogView } from './components/CatalogView';
+import { BranchInventoryView } from './components/BranchInventoryView';
 import { PurchasesView } from './components/PurchasesView';
 import { AuthorizationsView } from './components/AuthorizationsView';
 import { OrdersView } from './components/OrdersView';
@@ -56,6 +57,8 @@ export default function App() {
         return isCentral ? <UsersView /> : null;
       case 'catalog':
         return isCentral ? <CatalogView /> : null;
+      case 'branch_inventory':
+        return isCentral ? <BranchInventoryView /> : null;
       case 'purchases':
         return isCentral ? <PurchasesView /> : null;
       case 'authorizations':

@@ -1,15 +1,17 @@
-import type { 
-  User, 
-  Branch, 
-  Product, 
-  Purchase, 
-  BranchAuthorization, 
+import type {
+  User,
+  Branch,
+  Product,
+  Purchase,
+  BranchAuthorization,
   Inventory,
   Movement,
   Consumption,
   Order,
   Vehicle,
   Refueling,
+  Boat,
+  BoatRefueling,
   AuditLog
 } from '../types';
 
@@ -171,6 +173,26 @@ export const mockProducts: Product[] = [
     requiresBarcode: true,
     createdAt: new Date('2024-01-08'),
   },
+  {
+    id: 'prod-9',
+    barcode: '7891234567896',
+    name: 'Repelente de Insetos',
+    description: 'Repelente spray 200ml',
+    category: 'outro',
+    unit: 'unidade',
+    requiresBarcode: true,
+    createdAt: new Date('2024-01-10'),
+  },
+  {
+    id: 'prod-10',
+    barcode: '7891234567897',
+    name: 'Protetor Solar FPS 60',
+    description: 'Protetor solar corporal',
+    category: 'outro',
+    unit: 'unidade',
+    requiresBarcode: true,
+    createdAt: new Date('2024-01-10'),
+  },
 ];
 
 export const mockPurchases: Purchase[] = [
@@ -253,6 +275,7 @@ export const mockBranchAuthorizations: BranchAuthorization[] = [
 ];
 
 export const mockInventory: Inventory[] = [
+  // Branch 1 - Barco Hoteleiro 1
   {
     id: 'inv-1',
     productId: 'prod-1',
@@ -288,6 +311,249 @@ export const mockInventory: Inventory[] = [
     status: 'disponivel',
     unitPrice: 25.50,
     lastUpdated: new Date('2024-02-04'),
+  },
+  // Branch 2 - Barco Hoteleiro 2 (mais itens)
+  {
+    id: 'inv-5',
+    productId: 'prod-2',
+    branchId: 'branch-2',
+    quantity: 18,
+    status: 'disponivel',
+    unitPrice: 8.90,
+    lastUpdated: new Date('2024-02-06'),
+  },
+  {
+    id: 'inv-6',
+    productId: 'prod-3',
+    branchId: 'branch-2',
+    quantity: 40,
+    status: 'disponivel',
+    unitPrice: 12.50,
+    lastUpdated: new Date('2024-02-06'),
+  },
+  {
+    id: 'inv-7',
+    productId: 'prod-7',
+    branchId: 'branch-2',
+    quantity: 12,
+    status: 'disponivel',
+    unitPrice: 9.80,
+    lastUpdated: new Date('2024-02-06'),
+  },
+  // Branch 3 - Fazenda Santa Maria
+  {
+    id: 'inv-8',
+    productId: 'prod-1',
+    branchId: 'branch-3',
+    quantity: 70,
+    status: 'disponivel',
+    unitPrice: 25.50,
+    lastUpdated: new Date('2024-02-03'),
+  },
+  {
+    id: 'inv-9',
+    productId: 'prod-2',
+    branchId: 'branch-3',
+    quantity: 25,
+    status: 'disponivel',
+    unitPrice: 8.90,
+    lastUpdated: new Date('2024-02-03'),
+  },
+  {
+    id: 'inv-10',
+    productId: 'prod-4',
+    branchId: 'branch-3',
+    quantity: 60,
+    status: 'disponivel',
+    unitPrice: 10.00,
+    lastUpdated: new Date('2024-02-03'),
+  },
+  {
+    id: 'inv-11',
+    productId: 'prod-5',
+    branchId: 'branch-3',
+    quantity: 15,
+    status: 'disponivel',
+    unitPrice: 45.00,
+    lastUpdated: new Date('2024-02-03'),
+  },
+  {
+    id: 'inv-12',
+    productId: 'prod-8',
+    branchId: 'branch-3',
+    quantity: 35,
+    status: 'disponivel',
+    unitPrice: 5.50,
+    lastUpdated: new Date('2024-02-04'),
+  },
+  // Branch 4 - Fazenda São José
+  {
+    id: 'inv-13',
+    productId: 'prod-1',
+    branchId: 'branch-4',
+    quantity: 90,
+    status: 'disponivel',
+    unitPrice: 25.50,
+    lastUpdated: new Date('2024-02-05'),
+  },
+  {
+    id: 'inv-14',
+    productId: 'prod-2',
+    branchId: 'branch-4',
+    quantity: 8,
+    status: 'disponivel',
+    unitPrice: 8.90,
+    lastUpdated: new Date('2024-02-05'),
+  },
+  {
+    id: 'inv-15',
+    productId: 'prod-3',
+    branchId: 'branch-4',
+    quantity: 5,
+    status: 'disponivel',
+    unitPrice: 12.50,
+    lastUpdated: new Date('2024-02-05'),
+  },
+  {
+    id: 'inv-16',
+    productId: 'prod-6',
+    branchId: 'branch-4',
+    quantity: 20,
+    status: 'disponivel',
+    unitPrice: 35.00,
+    lastUpdated: new Date('2024-02-05'),
+  },
+  {
+    id: 'inv-17',
+    productId: 'prod-7',
+    branchId: 'branch-4',
+    quantity: 40,
+    status: 'disponivel',
+    unitPrice: 9.80,
+    lastUpdated: new Date('2024-02-05'),
+  },
+];
+
+// Estoque da Central (produtos comprados que ainda não foram enviados)
+export const mockCentralInventory: Inventory[] = [
+  {
+    id: 'cinv-1',
+    productId: 'prod-1',
+    branchId: 'central',
+    quantity: 200,
+    status: 'disponivel',
+    unitPrice: 25.50,
+    lastUpdated: new Date('2024-02-07'),
+  },
+  {
+    id: 'cinv-2',
+    productId: 'prod-2',
+    branchId: 'central',
+    quantity: 120,
+    status: 'disponivel',
+    unitPrice: 8.90,
+    lastUpdated: new Date('2024-02-07'),
+  },
+  {
+    id: 'cinv-3',
+    productId: 'prod-3',
+    branchId: 'central',
+    quantity: 150,
+    status: 'disponivel',
+    unitPrice: 12.50,
+    lastUpdated: new Date('2024-02-07'),
+  },
+  {
+    id: 'cinv-4',
+    productId: 'prod-4',
+    branchId: 'central',
+    quantity: 80,
+    status: 'disponivel',
+    unitPrice: 10.00,
+    lastUpdated: new Date('2024-02-06'),
+  },
+  {
+    id: 'cinv-5',
+    productId: 'prod-5',
+    branchId: 'central',
+    quantity: 50,
+    status: 'disponivel',
+    unitPrice: 45.00,
+    lastUpdated: new Date('2024-02-06'),
+  },
+  {
+    id: 'cinv-6',
+    productId: 'prod-6',
+    branchId: 'central',
+    quantity: 40,
+    status: 'disponivel',
+    unitPrice: 35.00,
+    lastUpdated: new Date('2024-02-06'),
+  },
+  {
+    id: 'cinv-7',
+    productId: 'prod-7',
+    branchId: 'central',
+    quantity: 90,
+    status: 'disponivel',
+    unitPrice: 9.80,
+    lastUpdated: new Date('2024-02-07'),
+  },
+  {
+    id: 'cinv-8',
+    productId: 'prod-8',
+    branchId: 'central',
+    quantity: 75,
+    status: 'disponivel',
+    unitPrice: 5.50,
+    lastUpdated: new Date('2024-02-07'),
+  },
+];
+
+export interface DirectShipment {
+  id: string;
+  branchId: string;
+  productId: string;
+  quantity: number;
+  sentBy: string;
+  status: 'em_transito' | 'recebido';
+  sentAt: Date;
+  receivedAt?: Date;
+  notes?: string;
+}
+
+export const mockDirectShipments: DirectShipment[] = [
+  {
+    id: 'ship-1',
+    branchId: 'branch-1',
+    productId: 'prod-1',
+    quantity: 50,
+    sentBy: 'user-1',
+    status: 'recebido',
+    sentAt: new Date('2024-02-02T10:00:00'),
+    receivedAt: new Date('2024-02-03T14:00:00'),
+    notes: 'Reposição programada',
+  },
+  {
+    id: 'ship-2',
+    branchId: 'branch-2',
+    productId: 'prod-3',
+    quantity: 40,
+    sentBy: 'user-1',
+    status: 'em_transito',
+    sentAt: new Date('2024-02-06T08:30:00'),
+    notes: 'Envio urgente de medicamentos',
+  },
+  {
+    id: 'ship-3',
+    branchId: 'branch-3',
+    productId: 'prod-1',
+    quantity: 70,
+    sentBy: 'user-1',
+    status: 'recebido',
+    sentAt: new Date('2024-02-01T09:00:00'),
+    receivedAt: new Date('2024-02-02T16:00:00'),
+    notes: 'Abastecimento inicial da fazenda',
   },
 ];
 
@@ -445,6 +711,108 @@ export const mockRefuelings: Refueling[] = [
     odometer: 77800,
     fueledBy: 'user-3',
     fueledAt: new Date('2024-02-03T09:00:00'),
+  },
+];
+
+export const mockBoats: Boat[] = [
+  {
+    id: 'boat-1',
+    name: 'Motor Principal BH-1',
+    registration: 'AM-001234',
+    model: 'Cummins QSB 6.7 (480HP)',
+    branchId: 'branch-1',
+    engineHours: 3200,
+    active: true,
+  },
+  {
+    id: 'boat-2',
+    name: 'Motor Auxiliar BH-1',
+    registration: 'AM-001234-AUX',
+    model: 'Gerador Stemac 150kVA',
+    branchId: 'branch-1',
+    engineHours: 5100,
+    active: true,
+  },
+  {
+    id: 'boat-3',
+    name: 'Motor Principal BH-2',
+    registration: 'AM-005678',
+    model: 'Cummins QSL 9 (405HP)',
+    branchId: 'branch-2',
+    engineHours: 1850,
+    active: true,
+  },
+  {
+    id: 'boat-4',
+    name: 'Motor Auxiliar BH-2',
+    registration: 'AM-005678-AUX',
+    model: 'Gerador Stemac 100kVA',
+    branchId: 'branch-2',
+    engineHours: 2900,
+    active: true,
+  },
+];
+
+export const mockBoatRefuelings: BoatRefueling[] = [
+  {
+    id: 'bref-1',
+    boatId: 'boat-1',
+    branchId: 'branch-1',
+    liters: 800,
+    pricePerLiter: 5.45,
+    totalPrice: 4360.00,
+    engineHours: 3150,
+    fueledBy: 'user-3',
+    fueledAt: new Date('2024-02-01T06:00:00'),
+    notes: 'Abastecimento para viagem ao Pico da Neblina',
+  },
+  {
+    id: 'bref-2',
+    boatId: 'boat-1',
+    branchId: 'branch-1',
+    liters: 600,
+    pricePerLiter: 5.50,
+    totalPrice: 3300.00,
+    engineHours: 3200,
+    fueledBy: 'user-3',
+    fueledAt: new Date('2024-02-05T07:00:00'),
+    notes: 'Reabastecimento de rotina',
+  },
+  {
+    id: 'bref-3',
+    boatId: 'boat-2',
+    branchId: 'branch-1',
+    liters: 200,
+    pricePerLiter: 5.45,
+    totalPrice: 1090.00,
+    engineHours: 5050,
+    fueledBy: 'user-3',
+    fueledAt: new Date('2024-02-03T08:30:00'),
+    notes: 'Diesel para gerador',
+  },
+  {
+    id: 'bref-4',
+    boatId: 'boat-3',
+    branchId: 'branch-2',
+    liters: 750,
+    pricePerLiter: 5.60,
+    totalPrice: 4200.00,
+    engineHours: 1800,
+    fueledBy: 'user-4',
+    fueledAt: new Date('2024-02-02T06:30:00'),
+    notes: 'Abastecimento para translado Manaus-Tefé',
+  },
+  {
+    id: 'bref-5',
+    boatId: 'boat-4',
+    branchId: 'branch-2',
+    liters: 180,
+    pricePerLiter: 5.55,
+    totalPrice: 999.00,
+    engineHours: 2870,
+    fueledBy: 'user-4',
+    fueledAt: new Date('2024-02-04T09:00:00'),
+    notes: 'Gerador auxiliar',
   },
 ];
 

@@ -125,6 +125,29 @@ export interface Refueling {
   fueledAt: Date;
 }
 
+export interface Boat {
+  id: string;
+  name: string;
+  registration: string;
+  model: string;
+  branchId: string;
+  engineHours: number;
+  active: boolean;
+}
+
+export interface BoatRefueling {
+  id: string;
+  boatId: string;
+  branchId: string;
+  liters: number;
+  pricePerLiter: number;
+  totalPrice: number;
+  engineHours: number;
+  fueledBy: string;
+  fueledAt: Date;
+  notes?: string;
+}
+
 export interface AuditLog {
   id: string;
   action: string;

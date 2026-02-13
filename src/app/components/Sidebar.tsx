@@ -13,7 +13,8 @@ import {
   LogOut,
   LayoutDashboard,
   Send,
-  X
+  X,
+  Warehouse
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -37,9 +38,10 @@ export function Sidebar({ currentUser, currentView, onViewChange, onLogout, isOp
     { id: 'branches', label: 'Filiais', icon: Building2 },
     { id: 'users', label: 'Usuários', icon: Users },
     { id: 'catalog', label: 'Catálogo Global', icon: Package },
+    { id: 'branch_inventory', label: 'Inventários', icon: Warehouse },
     { id: 'purchases', label: 'Compras', icon: ShoppingCart },
     { id: 'authorizations', label: 'Homologações', icon: CheckSquare },
-    { id: 'orders', label: 'Pedidos', icon: Send },
+    { id: 'orders', label: 'Envios', icon: Send },
     { id: 'refueling', label: 'Abastecimento', icon: Truck },
     { id: 'linen', label: 'Enxoval', icon: Bed },
     { id: 'reports', label: 'Relatórios', icon: BarChart3 },
@@ -50,7 +52,7 @@ export function Sidebar({ currentUser, currentView, onViewChange, onLogout, isOp
     { id: 'receiving', label: 'Recebimento', icon: ClipboardCheck },
     { id: 'consumption', label: 'Consumo', icon: FileText },
     { id: 'inventory', label: 'Inventário', icon: Archive },
-    { id: 'orders', label: 'Pedidos', icon: Send },
+    { id: 'orders', label: 'Solicitações', icon: Send },
     { id: 'refueling', label: 'Abastecimento', icon: Truck },
     { id: 'linen', label: 'Enxoval', icon: Bed },
     { id: 'reports', label: 'Relatórios', icon: BarChart3 },
