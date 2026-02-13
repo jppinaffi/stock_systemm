@@ -3,68 +3,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { ShoppingCart, Plus, Barcode, DollarSign } from 'lucide-react';
+import { ShoppingCart, Plus, DollarSign } from 'lucide-react';
 import { mockPurchases, mockProducts } from '../data/mockData';
+import { BarcodeProductPicker } from './BarcodeProductPicker';
 import type { Purchase } from '../types';
 
 export function PurchasesView() {
   const [purchases, setPurchases] = useState(mockPurchases);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    productId: '',
-    quantity: '',
-    unitPrice: '',
-    supplierId: 'supplier-1',
-  });
+  const [formData, setFormData] = useState({ productId: '', quantity: '', unitPrice: '', supplierId: 'supplier-1' });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     const quantity = parseFloat(formData.quantity);
     const unitPrice = parseFloat(formData.unitPrice);
-    
     const newPurchase: Purchase = {
-      id: `purchase-${Date.now()}`,
-      productId: formData.productId,
-      quantity,
-      unitPrice,
-      totalPrice: quantity * unitPrice,
-      supplierId: formData.supplierId,
-      purchaseDate: new Date(),
-      receivedBy: 'user-2', // Mock current user
-      createdAt: new Date(),
+      id: `purchase-${Date.now()}`, productId: formData.productId, quantity, unitPrice,
+      totalPrice: quantity * unitPrice, supplierId: formData.supplierId,
+      purchaseDate: new Date(), receivedBy: 'user-2', createdAt: new Date(),
     };
-    
     setPurchases([newPurchase, ...purchases]);
     setIsDialogOpen(false);
-    resetForm();
+    setFormData({ productId: '', quantity: '', unitPrice: '', supplierId: 'supplier-1' });
   };
 
-  const handleScanBarcode = () => {
-    // Simulate barcode scanner - find product by barcode
-    const mockBarcode = '7891234567890';
-    const product = mockProducts.find(p => p.barcode === mockBarcode);
-    if (product) {
-      setFormData({ ...formData, productId: product.id });
-      alert(`Produto encontrado: ${product.name}`);
-    } else {
-      alert('Produto não encontrado no catálogo');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      productId: '',
-      quantity: '',
-      unitPrice: '',
-      supplierId: 'supplier-1',
-    });
-  };
-
-  const totalPurchaseValue = purchases.reduce((sum, p) => sum + p.totalPrice, 0);
+  const totalValue = purchases.reduce((sum, p) => sum + p.totalPrice, 0);
   const totalItems = purchases.reduce((sum, p) => sum + p.quantity, 0);
 
   return (
@@ -74,72 +39,41 @@ export function PurchasesView() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestão de Compras</h1>
           <p className="text-gray-600">Registro de aquisições com rastreamento de custos</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="size-4 mr-2" />
-              Registrar Compra
-            </Button>
+            <Button><Plus className="size-4 mr-2" />Registrar Compra</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Registrar Nova Compra</DialogTitle>
-              <DialogDescription>
-                Registre a entrada de produtos via nota fiscal (bib)
-              </DialogDescription>
+              <DialogDescription>Registre a entrada de produtos via nota fiscal (bib)</DialogDescription>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="product">Produto</Label>
-                <div className="flex gap-2">
-                  <Select value={formData.productId} onValueChange={(value) => setFormData({ ...formData, productId: value })}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione um produto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockProducts.map(product => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} - {product.barcode || 'Sem código'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button type="button" variant="outline" onClick={handleScanBarcode}>
-                    <Barcode className="size-4" />
-                  </Button>
-                </div>
-              </div>
-              
+              <BarcodeProductPicker
+                value={formData.productId}
+                onSelect={productId => setFormData({ ...formData, productId })}
+                dropdownLabel="Ou selecione do catálogo"
+                dropdownProducts={mockProducts.map(p => ({
+                  product: p,
+                  subtitle: p.barcode || 'Sem código',
+                }))}
+              />
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantidade</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    step="0.01"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                    placeholder="0"
-                    required
-                  />
+                  <Label>Quantidade</Label>
+                  <Input type="number" step="0.01" value={formData.quantity}
+                    onChange={e => setFormData({ ...formData, quantity: e.target.value })} placeholder="0" required />
                 </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="unitPrice">Preço Unitário (R$)</Label>
-                  <Input
-                    id="unitPrice"
-                    type="number"
-                    step="0.01"
-                    value={formData.unitPrice}
-                    onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
-                    placeholder="0.00"
-                    required
-                  />
+                  <Label>Preço Unitário (R$)</Label>
+                  <Input type="number" step="0.01" value={formData.unitPrice}
+                    onChange={e => setFormData({ ...formData, unitPrice: e.target.value })} placeholder="0.00" required />
                 </div>
               </div>
-              
+
               {formData.quantity && formData.unitPrice && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">Valor Total da Compra:</p>
@@ -148,14 +82,10 @@ export function PurchasesView() {
                   </p>
                 </div>
               )}
-              
+
               <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1">
-                  Registrar Compra
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
+                <Button type="submit" className="flex-1">Registrar Compra</Button>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
               </div>
             </form>
           </DialogContent>
@@ -169,34 +99,21 @@ export function PurchasesView() {
             <CardTitle className="text-sm font-medium">Total de Compras</CardTitle>
             <ShoppingCart className="size-4 text-gray-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{purchases.length}</div>
-            <p className="text-xs text-gray-600 mt-1">Registros de aquisição</p>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{purchases.length}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Itens Adquiridos</CardTitle>
             <ShoppingCart className="size-4 text-gray-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalItems}</div>
-            <p className="text-xs text-gray-600 mt-1">Unidades compradas</p>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{totalItems}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Valor Total Investido</CardTitle>
             <DollarSign className="size-4 text-green-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              R$ {totalPurchaseValue.toFixed(2)}
-            </div>
-            <p className="text-xs text-gray-600 mt-1">Capital em aquisições</p>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-green-600">R$ {totalValue.toFixed(2)}</div></CardContent>
         </Card>
       </div>
 
@@ -219,36 +136,21 @@ export function PurchasesView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {purchases.map((purchase) => {
+              {purchases.map(purchase => {
                 const product = mockProducts.find(p => p.id === purchase.productId);
-                
                 return (
                   <TableRow key={purchase.id}>
+                    <TableCell>{new Date(purchase.purchaseDate).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>
-                      {new Date(purchase.purchaseDate).toLocaleDateString('pt-BR')}
+                      <p className="font-medium">{product?.name}</p>
+                      <p className="text-xs text-gray-600">{product?.barcode || 'Sem código'}</p>
                     </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{product?.name}</p>
-                        <p className="text-xs text-gray-600">
-                          {product?.barcode || 'Sem código'}
-                        </p>
-                      </div>
-                    </TableCell>
+                    <TableCell className="text-right">{purchase.quantity} {product?.unit}</TableCell>
+                    <TableCell className="text-right">R$ {purchase.unitPrice.toFixed(2)}</TableCell>
                     <TableCell className="text-right">
-                      {purchase.quantity} {product?.unit}
+                      <span className="font-medium text-green-600">R$ {purchase.totalPrice.toFixed(2)}</span>
                     </TableCell>
-                    <TableCell className="text-right">
-                      R$ {purchase.unitPrice.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="font-medium text-green-600">
-                        R$ {purchase.totalPrice.toFixed(2)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-600">
-                      {purchase.receivedBy}
-                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">{purchase.receivedBy}</TableCell>
                   </TableRow>
                 );
               })}

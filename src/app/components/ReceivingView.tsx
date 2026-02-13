@@ -4,33 +4,22 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { ClipboardCheck, Plus, Barcode, Package } from 'lucide-react';
+import { ClipboardCheck, Plus, Package } from 'lucide-react';
+import { BarcodeProductPicker } from './BarcodeProductPicker';
 import { mockProducts } from '../data/mockData';
 
 export function ReceivingView() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [scannedProduct, setScannedProduct] = useState<string>('');
-  const [quantity, setQuantity] = useState<string>('');
-
-  const handleScanBarcode = () => {
-    const mockBarcode = '7891234567890';
-    const product = mockProducts.find(p => p.barcode === mockBarcode);
-    
-    if (product) {
-      setScannedProduct(product.name);
-      alert(`Produto escaneado: ${product.name}`);
-    } else {
-      alert('Produto não encontrado no catálogo');
-    }
-  };
+  const [productId, setProductId] = useState('');
+  const [quantity, setQuantity] = useState('');
 
   const handleConfirmReceipt = () => {
-    if (scannedProduct && quantity) {
-      alert(`Recebimento confirmado!\nProduto: ${scannedProduct}\nQuantidade: ${quantity}`);
-      setIsDialogOpen(false);
-      setScannedProduct('');
-      setQuantity('');
-    }
+    if (!productId || !quantity) return;
+    const product = mockProducts.find(p => p.id === productId);
+    alert(`Recebimento confirmado!\nProduto: ${product?.name}\nQuantidade: ${quantity}`);
+    setIsDialogOpen(false);
+    setProductId('');
+    setQuantity('');
   };
 
   return (
@@ -40,49 +29,30 @@ export function ReceivingView() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Confirmação de Recebimento</h1>
           <p className="text-gray-600">Baixa de chegada de produtos via código de barras</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="size-4 mr-2" />
-              Confirmar Recebimento
-            </Button>
+            <Button><Plus className="size-4 mr-2" />Confirmar Recebimento</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Confirmar Recebimento de Produtos</DialogTitle>
-              <DialogDescription>
-                Escaneie o código de barras para registrar a chegada
-              </DialogDescription>
+              <DialogDescription>Escaneie ou digite o código de barras para registrar a chegada</DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
+              <BarcodeProductPicker
+                value={productId}
+                onSelect={setProductId}
+                dropdownLabel="Ou selecione um produto"
+              />
+
               <div className="space-y-2">
-                <Label>Escanear Código de Barras</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Código de barras"
-                    value={scannedProduct}
-                    readOnly
-                  />
-                  <Button type="button" onClick={handleScanBarcode}>
-                    <Barcode className="size-4" />
-                  </Button>
-                </div>
+                <Label>Quantidade Recebida</Label>
+                <Input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="0" />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantidade Recebida</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
-              
-              <Button onClick={handleConfirmReceipt} className="w-full">
+
+              <Button onClick={handleConfirmReceipt} className="w-full" disabled={!productId || !quantity}>
                 Confirmar Recebimento
               </Button>
             </div>
@@ -93,8 +63,7 @@ export function ReceivingView() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ClipboardCheck className="size-5" />
-            Histórico de Recebimentos
+            <ClipboardCheck className="size-5" />Histórico de Recebimentos
           </CardTitle>
           <CardDescription>Produtos recebidos e confirmados</CardDescription>
         </CardHeader>

@@ -217,6 +217,8 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
   const authorizedProducts = mockBranchAuthorizations.filter(a => a.branchId === branchId && a.authorized).map(a => a.productId);
   const needsJustification = requestForm.productId && !authorizedProducts.includes(requestForm.productId);
   const centralStock = sendForm.productId ? getCentralStock(sendForm.productId) : 0;
+  // Only pass productId to the dropdown if it actually exists as an option (i.e. is in central inventory)
+  const dropdownValue = mockCentralInventory.some(inv => inv.productId === sendForm.productId) ? sendForm.productId : '';
 
   // ── JSX ──────────────────────────────────────────────
   return (
@@ -335,8 +337,8 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
                           </div>
                           {barcodeResult && (
                             <div className={`text-xs p-2 rounded flex items-center gap-2 ${!barcodeResult.found ? 'bg-red-50 text-red-700 border border-red-200'
-                                : barcodeResult.inCentral ? 'bg-green-50 text-green-700 border border-green-200'
-                                  : 'bg-orange-50 text-orange-700 border border-orange-200'
+                              : barcodeResult.inCentral ? 'bg-green-50 text-green-700 border border-green-200'
+                                : 'bg-orange-50 text-orange-700 border border-orange-200'
                               }`}>
                               {!barcodeResult.found
                                 ? <><XCircle className="size-3" /> Nenhum produto encontrado para este código</>
@@ -348,7 +350,7 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
                         {/* Dropdown de produtos do estoque central */}
                         <div className="space-y-2">
                           <Label>Ou selecione do inventário da Central</Label>
-                          <Select value={sendForm.productId} onValueChange={handleProductSelect}>
+                          <Select value={dropdownValue} onValueChange={handleProductSelect}>
                             <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
                             <SelectContent>
                               {mockCentralInventory.map(inv => {
