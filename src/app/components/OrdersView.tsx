@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
-import { Send, Plus, CheckCircle, XCircle, Clock, Truck, ArrowRight, Inbox, AlertTriangle, Search } from 'lucide-react';
+import { Send, Plus, CheckCircle, XCircle, Clock, Truck, ArrowRight, Inbox, AlertTriangle, Search, Camera } from 'lucide-react';
 import { mockOrders, mockProducts, mockBranches, mockBranchAuthorizations, mockCentralInventory, mockDirectShipments } from '../data/mockData';
+import { BarcodeScanner } from './BarcodeScanner';
 import type { DirectShipment } from '../data/mockData';
 import type { User, Order } from '../types';
 
@@ -125,6 +126,10 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
   const [shipments, setShipments] = useState<DirectShipment[]>(mockDirectShipments);
   const [activeTab, setActiveTab] = useState(isCentral ? 'send' : 'requests');
 
+  // Scanner state
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannerTarget, setScannerTarget] = useState<'request' | 'send' | null>(null);
+
   // Branch request form
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [requestForm, setRequestForm] = useState({ productId: '', quantity: '', justification: '' });
@@ -141,18 +146,39 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
   const notInCentral = barcodeResult?.found === true && !barcodeResult.inCentral;
 
   // ── Handlers ─────────────────────────────────────────
-  const handleBarcodeLookup = () => {
-    if (!barcodeInput.trim()) return;
-    const product = mockProducts.find(p => p.barcode === barcodeInput.trim());
+  const handleBarcodeLookup = (code?: string) => {
+    const targetCode = code || barcodeInput.trim();
+    if (!targetCode) return;
+
+    const product = mockProducts.find(p => p.barcode === targetCode);
     if (product) {
       const inCentral = mockCentralInventory.some(inv => inv.productId === product.id);
       setBarcodeResult({ found: true, name: product.name, inCentral });
-      setSendForm(prev => ({ ...prev, productId: product.id }));
+
+      if (scannerTarget === 'send' || (!code && isSendDialogOpen)) {
+        setSendForm(prev => ({ ...prev, productId: product.id }));
+        setBarcodeInput(targetCode);
+      } else if (scannerTarget === 'request' || (!code && isRequestDialogOpen)) {
+        setRequestForm(prev => ({ ...prev, productId: product.id }));
+        setBarcodeInput(targetCode);
+      }
     } else {
       setBarcodeResult({ found: false, name: '', inCentral: false });
-      setSendForm(prev => ({ ...prev, productId: '' }));
+      if (scannerTarget === 'send') setSendForm(prev => ({ ...prev, productId: '' }));
+      if (scannerTarget === 'request') setRequestForm(prev => ({ ...prev, productId: '' }));
+      if (code) setBarcodeInput(code);
     }
     setConfirmNotInCentral(false);
+  };
+
+  const handleScanSuccess = (decodedText: string) => {
+    setIsScannerOpen(false);
+    handleBarcodeLookup(decodedText);
+  };
+
+  const openScanner = (target: 'request' | 'send') => {
+    setScannerTarget(target);
+    setIsScannerOpen(true);
   };
 
   const handleProductSelect = (productId: string) => {
@@ -248,16 +274,21 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
               <form onSubmit={handleRequestSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Produto</Label>
-                  <Select value={requestForm.productId} onValueChange={v => setRequestForm({ ...requestForm, productId: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione um produto" /></SelectTrigger>
-                    <SelectContent>
-                      {mockProducts.map(p => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name} {!authorizedProducts.includes(p.id) && '⚠️ Não homologado'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select value={requestForm.productId} onValueChange={v => setRequestForm({ ...requestForm, productId: v })}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione um produto" /></SelectTrigger>
+                      <SelectContent>
+                        {mockProducts.map(p => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name} {!authorizedProducts.includes(p.id) && '⚠️ Não homologado'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" onClick={() => openScanner('request')} title="Escanear com a câmera">
+                      <Camera className="size-4" />
+                    </Button>
+                  </div>
                   {needsJustification && <p className="text-xs text-orange-600">⚠️ Item não homologado. Justificativa obrigatória.</p>}
                 </div>
                 <div className="space-y-2">
@@ -278,6 +309,10 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
                   <Button type="button" variant="outline" onClick={() => setIsRequestDialogOpen(false)}>Cancelar</Button>
                 </div>
               </form>
+
+              {isScannerOpen && scannerTarget === 'request' && (
+                <BarcodeScanner onScanSuccess={handleScanSuccess} onClose={() => setIsScannerOpen(false)} />
+              )}
             </DialogContent>
           </Dialog>
         )}
@@ -333,7 +368,12 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
                             <Input placeholder="Digite ou escaneie o código de barras" value={barcodeInput}
                               onChange={e => { setBarcodeInput(e.target.value); setBarcodeResult(null); setConfirmNotInCentral(false); }}
                               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeLookup(); } }} />
-                            <Button type="button" variant="outline" onClick={handleBarcodeLookup}><Search className="size-4" /></Button>
+                            <Button type="button" variant="outline" onClick={() => handleBarcodeLookup()} title="Pesquisar">
+                              <Search className="size-4" />
+                            </Button>
+                            <Button type="button" variant="outline" onClick={() => openScanner('send')} title="Escanear com a câmera">
+                              <Camera className="size-4" />
+                            </Button>
                           </div>
                           {barcodeResult && (
                             <div className={`text-xs p-2 rounded flex items-center gap-2 ${!barcodeResult.found ? 'bg-red-50 text-red-700 border border-red-200'
@@ -403,6 +443,10 @@ export function OrdersView({ currentUser }: { currentUser: User }) {
                           <Button type="button" variant="outline" onClick={() => { setIsSendDialogOpen(false); resetSendForm(); }}>Cancelar</Button>
                         </div>
                       </form>
+
+                      {isScannerOpen && scannerTarget === 'send' && (
+                        <BarcodeScanner onScanSuccess={handleScanSuccess} onClose={() => setIsScannerOpen(false)} />
+                      )}
                     </DialogContent>
                   </Dialog>
                 </div>

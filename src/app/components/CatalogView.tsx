@@ -209,16 +209,16 @@ export function CatalogView() {
                 </Button>
               </div>
             </form>
+
+            {isScannerOpen && (
+              <BarcodeScanner
+                onScanSuccess={handleScanSuccess}
+                onClose={() => setIsScannerOpen(false)}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
-
-      {isScannerOpen && (
-        <BarcodeScanner
-          onScanSuccess={handleScanSuccess}
-          onClose={() => setIsScannerOpen(false)}
-        />
-      )}
 
       {/* Filters */}
       <div className="flex gap-4">
