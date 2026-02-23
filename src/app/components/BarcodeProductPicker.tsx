@@ -3,8 +3,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Search, CheckCircle, XCircle } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Camera } from 'lucide-react';
 import { mockProducts } from '../data/mockData';
+import { BarcodeScanner } from './BarcodeScanner';
 import type { Product } from '../types';
 
 interface BarcodeProductPickerProps {
@@ -35,17 +36,27 @@ export function BarcodeProductPicker({
     dropdownPlaceholder = 'Selecione um produto',
 }: BarcodeProductPickerProps) {
     const [barcodeInput, setBarcodeInput] = useState('');
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [lookupResult, setLookupResult] = useState<{ found: boolean; name: string } | null>(null);
 
-    const handleLookup = () => {
-        if (!barcodeInput.trim()) return;
-        const product = mockProducts.find(p => p.barcode === barcodeInput.trim());
+    const handleLookup = (code?: string) => {
+        const targetCode = code || barcodeInput.trim();
+        if (!targetCode) return;
+
+        const product = mockProducts.find(p => p.barcode === targetCode);
         if (product) {
             setLookupResult({ found: true, name: product.name });
             onSelect(product.id);
+            setBarcodeInput(targetCode);
         } else {
             setLookupResult({ found: false, name: '' });
+            if (code) setBarcodeInput(code);
         }
+    };
+
+    const handleScanSuccess = (decodedText: string) => {
+        setIsScannerOpen(false);
+        handleLookup(decodedText);
     };
 
     const handleDropdownSelect = (productId: string) => {
@@ -78,14 +89,23 @@ export function BarcodeProductPicker({
                         onChange={e => { setBarcodeInput(e.target.value); setLookupResult(null); }}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleLookup(); } }}
                     />
-                    <Button type="button" variant="outline" onClick={handleLookup}>
+                    <Button type="button" variant="outline" onClick={() => handleLookup()} title="Pesquisar">
                         <Search className="size-4" />
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsScannerOpen(true)}
+                        title="Escanear com a câmera"
+                        className="shrink-0"
+                    >
+                        <Camera className="size-4" />
                     </Button>
                 </div>
                 {lookupResult && (
                     <div className={`text-xs p-2 rounded flex items-center gap-2 ${lookupResult.found
-                            ? 'bg-green-50 text-green-700 border border-green-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
                         }`}>
                         {lookupResult.found
                             ? <><CheckCircle className="size-3" /> Produto encontrado: <strong>{lookupResult.name}</strong></>
@@ -94,6 +114,13 @@ export function BarcodeProductPicker({
                     </div>
                 )}
             </div>
+
+            {isScannerOpen && (
+                <BarcodeScanner
+                    onScanSuccess={handleScanSuccess}
+                    onClose={() => setIsScannerOpen(false)}
+                />
+            )}
 
             {/* Dropdown */}
             <div className="space-y-2">

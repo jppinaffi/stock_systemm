@@ -7,13 +7,15 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Package, Plus, Barcode, Search, Filter } from 'lucide-react';
+import { Package, Plus, Barcode, Search, Filter, Camera } from 'lucide-react';
 import { mockProducts } from '../data/mockData';
+import { BarcodeScanner } from './BarcodeScanner';
 import type { Product } from '../types';
 
 export function CatalogView() {
   const [products, setProducts] = useState(mockProducts);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -28,10 +30,10 @@ export function CatalogView() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (editingProduct) {
-      setProducts(products.map(p => 
-        p.id === editingProduct.id 
+      setProducts(products.map(p =>
+        p.id === editingProduct.id
           ? { ...p, ...formData }
           : p
       ));
@@ -43,7 +45,7 @@ export function CatalogView() {
       };
       setProducts([...products, newProduct]);
     }
-    
+
     setIsDialogOpen(false);
     resetForm();
   };
@@ -61,11 +63,9 @@ export function CatalogView() {
     setIsDialogOpen(true);
   };
 
-  const handleScanBarcode = () => {
-    // Simulate barcode scanner
-    const mockBarcode = `78912345678${Math.floor(Math.random() * 100)}`;
-    setFormData({ ...formData, barcode: mockBarcode });
-    alert(`Código de barras escaneado: ${mockBarcode}`);
+  const handleScanSuccess = (decodedText: string) => {
+    setFormData({ ...formData, barcode: decodedText });
+    setIsScannerOpen(false);
   };
 
   const resetForm = () => {
@@ -99,8 +99,8 @@ export function CatalogView() {
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.barcode.includes(searchTerm) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      product.barcode.includes(searchTerm) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
@@ -112,7 +112,7 @@ export function CatalogView() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Catálogo Global de Produtos</h1>
           <p className="text-gray-600">Gestão centralizada de itens alimentícios, medicamentos e enxoval</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
@@ -127,7 +127,7 @@ export function CatalogView() {
                 {editingProduct ? 'Atualize as informações do produto' : 'Cadastre um novo item no catálogo'}
               </DialogDescription>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -139,12 +139,18 @@ export function CatalogView() {
                       onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
                       placeholder="7891234567890"
                     />
-                    <Button type="button" variant="outline" onClick={handleScanBarcode}>
-                      <Barcode className="size-4" />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsScannerOpen(true)}
+                      title="Escanear Código"
+                      className="shrink-0"
+                    >
+                      <Camera className="size-4" />
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="category">Categoria</Label>
                   <Select value={formData.category} onValueChange={(value: any) => setFormData({ ...formData, category: value })}>
@@ -160,7 +166,7 @@ export function CatalogView() {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="name">Nome do Produto</Label>
                 <Input
@@ -171,7 +177,7 @@ export function CatalogView() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Textarea
@@ -182,7 +188,7 @@ export function CatalogView() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="unit">Unidade de Medida</Label>
                 <Input
@@ -193,7 +199,7 @@ export function CatalogView() {
                   required
                 />
               </div>
-              
+
               <div className="flex gap-2 pt-4">
                 <Button type="submit" className="flex-1">
                   {editingProduct ? 'Salvar Alterações' : 'Cadastrar Produto'}
@@ -206,6 +212,13 @@ export function CatalogView() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {isScannerOpen && (
+        <BarcodeScanner
+          onScanSuccess={handleScanSuccess}
+          onClose={() => setIsScannerOpen(false)}
+        />
+      )}
 
       {/* Filters */}
       <div className="flex gap-4">
@@ -255,7 +268,7 @@ export function CatalogView() {
                     Unidade: <span className="font-medium">{product.unit}</span>
                   </span>
                 </div>
-                
+
                 {product.barcode ? (
                   <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded">
                     <Barcode className="size-4 text-gray-600" />
@@ -266,14 +279,14 @@ export function CatalogView() {
                     Sem código de barras (registro manual)
                   </div>
                 )}
-                
+
                 <div className="text-xs text-gray-500">
                   Cadastrado em: {new Date(product.createdAt).toLocaleDateString('pt-BR')}
                 </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full"
                   onClick={() => handleEdit(product)}
                 >
@@ -292,7 +305,7 @@ export function CatalogView() {
             <Package className="size-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum produto encontrado</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || filterCategory !== 'all' 
+              {searchTerm || filterCategory !== 'all'
                 ? 'Tente ajustar os filtros de busca'
                 : 'Comece cadastrando o primeiro produto do catálogo'
               }
